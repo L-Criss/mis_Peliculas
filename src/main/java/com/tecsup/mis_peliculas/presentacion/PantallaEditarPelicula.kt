@@ -12,18 +12,39 @@ import androidx.navigation.NavController
 import com.tecsup.mis_peliculas.viewmodel.PeliculaViewModel
 
 @Composable
-fun PantallaEditarPelicula(idPelicula: Int, navController: NavController, viewModel: PeliculaViewModel) {
+fun PantallaEditarPelicula(
+    idPelicula: Int,
+    navController: NavController,
+    viewModel: PeliculaViewModel
+) {
+
     val context = LocalContext.current
 
     var titulo by remember { mutableStateOf("") }
     var genero by remember { mutableStateOf("") }
     var anio by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
+    var cargando by remember { mutableStateOf(true) }
+
+    //depende del ID
+    LaunchedEffect(idPelicula) {
         val pelicula = viewModel.obtenerPelicula(idPelicula)
+
         titulo = pelicula.titulo
         genero = pelicula.genero
         anio = pelicula.anio.toString()
+
+        cargando = false
+    }
+
+    if (cargando) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     Column(
@@ -33,7 +54,12 @@ fun PantallaEditarPelicula(idPelicula: Int, navController: NavController, viewMo
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Editar Película", style = MaterialTheme.typography.headlineMedium)
+
+        Text(
+            text = "Editar Película",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -42,38 +68,58 @@ fun PantallaEditarPelicula(idPelicula: Int, navController: NavController, viewMo
             label = { Text("Título") },
             modifier = Modifier.fillMaxWidth()
         )
+
         OutlinedTextField(
             value = genero,
             onValueChange = { genero = it },
             label = { Text("Género") },
             modifier = Modifier.fillMaxWidth()
         )
+
         OutlinedTextField(
             value = anio,
             onValueChange = { anio = it },
             label = { Text("Año") },
             modifier = Modifier.fillMaxWidth()
         )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(onClick = { navController.popBackStack() }) {
+
+            OutlinedButton(onClick = {
+                navController.popBackStack()
+            }) {
                 Text("Cancelar")
             }
+
             Button(onClick = {
+
                 val anioInt = anio.toIntOrNull()
                 if (titulo.isBlank() || genero.isBlank() || anio.isBlank()) {
-                    Toast.makeText(context, "Faltan datos requeridos", Toast.LENGTH_SHORT).show()
-                } else if (anioInt == null) {
-                    Toast.makeText(context, "Año incorrecto", Toast.LENGTH_SHORT).show()
-                } else {
-                    viewModel.actualizarPelicula(idPelicula, titulo, genero, anioInt)
-                    Toast.makeText(context, "Película actualizada", Toast.LENGTH_SHORT).show()
-                    navController.popBackStack()
+                    Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+                    return@Button
                 }
+
+                if (anioInt == null || anioInt <= 1800 || anioInt > 2100) {
+                    Toast.makeText(context, "Año inválido", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                viewModel.actualizarPelicula(
+                    idPelicula,
+                    titulo.trim(),
+                    genero.trim(),
+                    anioInt
+                )
+
+                Toast.makeText(context, "Película actualizada", Toast.LENGTH_SHORT).show()
+
+                navController.popBackStack()
+
             }) {
                 Text("Actualizar")
             }

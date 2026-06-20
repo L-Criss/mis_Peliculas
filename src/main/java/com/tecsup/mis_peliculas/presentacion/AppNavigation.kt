@@ -8,23 +8,47 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tecsup.mis_peliculas.viewmodel.PeliculaViewModel
 
+// Rutas centralizadas
+object Rutas {
+    const val INICIO = "inicio"
+    const val EDITAR = "editar"
+}
+
 @Composable
 fun AppNavigation(viewModel: PeliculaViewModel) {
+
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = "inicio"
+        startDestination = Rutas.INICIO
     ) {
-        composable("inicio") {
-            PantallaPeliculas(navController = navController, viewModel = viewModel)
+
+        //Pantalla principal - CRUD
+        composable(Rutas.INICIO) {
+            PantallaPeliculas(
+                navController = navController,
+                viewModel = viewModel
+            )
         }
+
+        //Pantalla editar
         composable(
-            "editar/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
+            route = "${Rutas.EDITAR}/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.IntType
+                }
+            )
         ) { backStackEntry ->
+
             val id = backStackEntry.arguments?.getInt("id") ?: 0
-            PantallaEditarPelicula(idPelicula = id, navController = navController, viewModel = viewModel)
+
+            PantallaEditarPelicula(
+                idPelicula = id,
+                navController = navController,
+                viewModel = viewModel
+            )
         }
     }
 }
